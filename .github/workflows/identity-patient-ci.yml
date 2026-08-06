@@ -1,10 +1,22 @@
-name: CI
+name: Identity & patient CI
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'identity-patient/**'
+      - '.github/workflows/identity-patient-ci.yml'
+      - '.github/actions/setup-project/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'identity-patient/**'
+      - '.github/workflows/identity-patient-ci.yml'
+      - '.github/actions/setup-project/**'
+
+defaults:
+  run:
+    working-directory: identity-patient
 
 jobs:
   build:
@@ -29,12 +41,12 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            .next/cache
+            identity-patient/.next/cache
           # Generate a new cache whenever packages or source files change.
-          key: nextjs-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**') }}
+          key: nextjs-identity-patient-${{ matrix.node-version }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('identity-patient/src/**') }}
 
       - name: Build Next.js
-        run: npm run build-local
+        run: pnpm run build-local
         env:
           NEXT_PUBLIC_SENTRY_DISABLED: 'true' # Only upload Sentry source maps in deployment
           NEXT_PUBLIC_APP_URL: http://localhost:3008
@@ -44,9 +56,9 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: |
-            .next
-            next-env.d.ts
-          key: nextjs-build-${{ matrix.node-version }}-${{ github.sha }}
+            identity-patient/.next
+            identity-patient/next-env.d.ts
+          key: nextjs-build-identity-patient-${{ matrix.node-version }}-${{ github.sha }}
 
   static:
     strategy:
@@ -69,22 +81,23 @@ jobs:
 
       - if: github.event_name == 'pull_request'
         name: Validate all commits from PR
+        working-directory: .
         run: npx commitlint --from $BASE_SHA --to $HEAD_SHA --verbose
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
       - name: Linter
-        run: npx next typegen && npm run lint
+        run: pnpm exec next typegen && pnpm run lint
 
       - name: Type checking
-        run: npm run check:types
+        run: pnpm run check:types
 
       - name: Check dependencies
-        run: npm run check:deps
+        run: pnpm run check:deps
 
       - name: I18n check
-        run: npm run check:i18n
+        run: pnpm run check:i18n
 
   unit:
     strategy:
@@ -106,10 +119,12 @@ jobs:
       - name: Run unit tests
         uses: docker://mcr.microsoft.com/playwright:v1.61.0
         with:
-          args: npm run test -- --coverage
+          args: sh -c "cd identity-patient && npx --yes pnpm@11.5.2 run test -- --coverage"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v6
+        with:
+          directory: identity-patient/coverage
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -133,7 +148,7 @@ jobs:
       - name: Run storybook tests
         uses: docker://mcr.microsoft.com/playwright:v1.61.0
         with:
-          args: npm run storybook:test
+          args: sh -c "cd identity-patient && npx --yes pnpm@11.5.2 run storybook:test"
 
   e2e:
     strategy:
@@ -155,11 +170,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           restore-nextjs-cache: true
+          working-directory: identity-patient
 
       - name: Run E2E tests
         uses: docker://mcr.microsoft.com/playwright:v1.61.0
         with:
-          args: sh -c "HOME=/root npm run test:e2e" # Set HOME to /root to avoid Playwright error with Firebox
+          args: sh -c "cd identity-patient && HOME=/root npx --yes pnpm@11.5.2 run test:e2e" # Set HOME to /root to avoid Playwright error with Firebox
         env:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
 
@@ -173,6 +189,7 @@ jobs:
           playwright: true
           exitOnceUploaded: true # Speed up by skipping the build results
           outputDir: storybook-static
+          workingDir: identity-patient
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
       - name: Upload test results
@@ -180,13 +197,48 @@ jobs:
         if: failure()
         with:
           name: test-results
-          path: test-results/
+          path: identity-patient/test-results/
           retention-days: 7
+
+  deploy:
+    name: Deploy to Vercel (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build, static, unit, storybook, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Vercel CLI
+        working-directory: .
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.IDENTITY_PATIENT_VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.IDENTITY_PATIENT_VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.IDENTITY_PATIENT_VERCEL_PROJECT_ID }}
+
+      - name: Build for Vercel
+        run: vercel build --prod --token=${{ secrets.IDENTITY_PATIENT_VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.IDENTITY_PATIENT_VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.IDENTITY_PATIENT_VERCEL_PROJECT_ID }}
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.IDENTITY_PATIENT_VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.IDENTITY_PATIENT_VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.IDENTITY_PATIENT_VERCEL_PROJECT_ID }}
 
   synchronize-with-crowdin:
     name: GitHub PR synchronize with Crowdin
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
 
     if: github.event_name == 'pull_request'
 

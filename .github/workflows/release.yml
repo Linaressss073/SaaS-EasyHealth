@@ -2,7 +2,7 @@ name: Release
 
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: ['Identity & patient CI']
     types:
       - completed
     branches:
@@ -33,10 +33,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
-        run: npm audit signatures
-
       - name: Release
-        run: npx semantic-release
+        working-directory: identity-patient
+        run: pnpm exec semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,12 @@
+packages:
+  - identity-patient
+  - notification
+allowBuilds:
+  '@parcel/watcher': true
+  '@sentry/cli': true
+  '@swc/core': true
+  bufferutil: true
+  core-js: true
+  esbuild: true
+  lefthook: true
+  utf-8-validate: true

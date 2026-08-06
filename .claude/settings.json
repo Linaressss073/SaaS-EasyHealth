@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python \"skills/analizar-repo/scripts/detect_stack.py\" .)",
+      "Bash(mkdir -p \".claude/skills/analizar-repo/scripts\" \".claude/skills/analizar-repo/references\")",
+      "Bash(cp \"skills/analizar-repo/SKILL.md\" \".claude/skills/analizar-repo/SKILL.md\")",
+      "Bash(cp \"skills/analizar-repo/scripts/detect_stack.py\" \".claude/skills/analizar-repo/scripts/detect_stack.py\")",
+      "Bash(cp \"skills/analizar-repo/references/claude_md_template.md\" \".claude/skills/analizar-repo/references/claude_md_template.md\")",
+      "Read(//c/Users/Deivy/.claude/projects/d--Universidad-Practica-de-Software-SaaS-EasyHealth/memory//**)",
+      "Read(//c/Users/Deivy/.claude/projects/d--Universidad-Practica-de-Software-SaaS-EasyHealth/memory/**)",
+      "Bash(git mv *)",
+      "Bash(git rm *)",
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(LOGFILE=\"/c/Users/Deivy/AppData/Local/npm-cache/_logs/2026-08-06T06_13_54_482Z-debug-0.log\" *)",
+      "Read(//c/Users/Deivy/AppData/Local/npm-cache/_logs/**)",
+      "Bash(npm run *)",
+      "Bash(MAILTRAP_HOST=sandbox.smtp.mailtrap.io MAILTRAP_PORT=2525 MAILTRAP_USER=test MAILTRAP_PASS=test MAIL_FROM_ADDRESS=no-reply@easyhealth.dev MAIL_FROM_NAME=EasyHealth CLERK_WEBHOOK_SIGNING_SECRET=whsec_test npm run build)",
+      "Bash(npx next *)"
+    ]
+  }
+}

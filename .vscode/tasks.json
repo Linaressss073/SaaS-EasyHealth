@@ -5,8 +5,11 @@
   "tasks": [
     {
       "label": "Project wide type checking with TypeScript",
-      "type": "npm",
-      "script": "check:types",
+      "type": "shell",
+      "command": "pnpm run check:types",
+      "options": {
+        "cwd": "${workspaceFolder}/identity-patient"
+      },
       "problemMatcher": ["$tsc"],
       "group": {
         "kind": "build",
