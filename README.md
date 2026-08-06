@@ -1,25 +1,19 @@
 # SaaS-EasyHealth
 
-Monorepo (pnpm workspaces) para un SaaS de salud pensado como microservicios.
-Ver [`CLAUDE.md`](./CLAUDE.md) para el detalle de arquitectura, stack y cómo
-correr cada servicio.
+Repo meta de un SaaS de salud pensado como microservicios. Este repositorio
+no tiene código — es el punto de referencia de la arquitectura completa
+(HLD, decisiones cross-servicio, skills de Claude Code). Cada servicio con
+código real vive en su propio repositorio.
+
+Ver [`CLAUDE.md`](./CLAUDE.md) para el detalle de arquitectura y
+convenciones.
 
 ## Servicios
 
-| Carpeta | Estado |
+| Repositorio | Estado |
 | --- | --- |
-| [`identity-patient/`](./identity-patient) | Next.js boilerplate (Clerk auth + multi-tenancy), sin adaptar al dominio aún |
-| [`notification/`](./notification) | Servicio de mail (Mailtrap) + webhook de bienvenida de Clerk |
-| [`ehr-prescriptions/`](./ehr-prescriptions) | No implementado |
-| [`billing/`](./billing) | No implementado |
-| [`telehealth/`](./telehealth) | No implementado |
-
-## Quick start
-
-```bash
-pnpm install                              # instala ambos workspaces
-pnpm --filter identity-patient dev        # app principal (puerto 3000)
-pnpm --filter notification dev            # servicio de mail (puerto 3009)
-```
-
-Requiere [pnpm](https://pnpm.io) instalado (`npm install -g pnpm` o `corepack enable`).
+| [easyhealth-identity-patient](https://github.com/Linaressss073/easyhealth-identity-patient) | Next.js boilerplate (Clerk auth + multi-tenancy), sin adaptar al dominio aún |
+| [easyhealth-notification](https://github.com/Linaressss073/easyhealth-notification) | Servicio de mail (Mailtrap) + webhook de bienvenida de Clerk |
+| [`ehr-prescriptions/`](./ehr-prescriptions) | No implementado, sin repo propio todavía |
+| [`billing/`](./billing) | No implementado, sin repo propio todavía |
+| [`telehealth/`](./telehealth) | No implementado, sin repo propio todavía |
