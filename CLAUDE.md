@@ -328,6 +328,12 @@ individual (no hay nada compartido/publicado como paquete):
   (no de producción — el sandbox nunca entrega a bandejas reales, solo a
   la inbox de prueba de Mailtrap).
 - **`CLERK_WEBHOOK_SIGNING_SECRET` en `easyhealth-notification` es un
-  placeholder** en `.env.local` — no se probó el flujo de webhook esta
-  sesión, solo el envío de correo directo. Reemplazar antes de probar
-  `user.created`.
+  secreto de prueba generado localmente**, no el real de Clerk — Clerk
+  entrega webhooks a una URL pública y este servicio corre en localhost.
+  El flujo completo (verificación de firma → parseo → envío por Mailtrap)
+  ya se probó de punta a punta firmando una request realista con el mismo
+  paquete `svix` que usa Clerk (`scripts/test-clerk-webhook.mjs` en ese
+  repo). Para probar contra el Clerk real hace falta un túnel
+  (localtunnel/ngrok) exponiendo el puerto 3009 y registrar esa URL en el
+  dashboard de Clerk, que entrega el secreto real — no bloqueante, pendiente
+  si se quiere el último tramo end-to-end con Clerk real.
