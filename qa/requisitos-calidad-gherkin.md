@@ -307,6 +307,29 @@ críticos (agendamiento, admisión, registro de consulta) son operables
 (360–767px), tablet (768–1023px), escritorio (≥1024px); dispositivos
 objetivo mínimos: un smartphone Android de gama media y un desktop 1366×768.
 
+**Validación externa (skill `ui-ux-pro-max`, base de datos independiente de
+84 estilos / 98 guías de UX).** Se corrió una búsqueda con el rubro
+"healthcare" contra el stack real del proyecto (Next.js) — dos hallazgos
+confirman, de forma independiente, lo ya reportado en esta adenda:
+
+- *Form Labels* / *Input Labels* (severidad **Alta** en la base de datos):
+  "Placeholder-only inputs" está explícitamente listado como anti-patrón
+  — coincide exactamente con el hallazgo de esta sección sobre los seis
+  módulos construidos esta sesión.
+- *Submit Feedback* (severidad **Alta**): "No feedback after submit" es
+  anti-patrón — coincide con el punto 8 de la revisión QA/UX previa (sin
+  estado de carga visible en los submits).
+
+El estilo recomendado para el rubro es **"Accessible & Ethical"** (target
+WCAG AAA, no solo AA — más estricto que el RNF-14 propuesto arriba;
+válido como aspiración, RNF-14 queda como el piso obligatorio). Paleta y
+tipografía (azul clínico `#0284C7` + verde salud `#16A34A` + Figtree/Noto
+Sans) quedaron persistidas en
+`easyhealth-identity-patient/design-system/easyhealth/MASTER.md` como
+referencia de implementación — no es un requisito nuevo, es la guía de
+estilo que ayuda a cumplir RNF-14/15 de forma consistente en todo el
+frontend en vez de decisión por decisión.
+
 **Hallazgo de auditoría (no bloqueante, pero sistemático):** en los seis
 módulos construidos esta sesión (Citas, Admisión, Consultas, Farmacia,
 Agenda-admin, Soporte), casi todos los `<input>`/`<select>`/`<textarea>`
