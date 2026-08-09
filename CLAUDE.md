@@ -36,6 +36,65 @@ repositorio de GitHub, listados en la sección siguiente.
 | [easyhealth-telehealth](https://github.com/Linaressss073/easyhealth-telehealth) | 3006 | Fuera del documento — agregado a pedido explícito | NestJS — sesiones de telemedicina, sin frontend todavía |
 | [easyhealth-notification](https://github.com/Linaressss073/easyhealth-notification) | 3009 | Soporte de RF-22/32/44 | Next.js (solo API routes) — envío de correo vía Mailtrap |
 
+### Diagrama
+
+```mermaid
+flowchart TB
+    Browser(["Usuario<br/>(navegador)"])
+
+    subgraph Frontend["easyhealth-identity-patient · :3000 — único frontend"]
+        IP["Server Components<br/>+ Server Actions"]
+        Authz["/api/internal/authz<br/>/api/internal/audit"]
+    end
+
+    subgraph Dominio["Servicios NestJS de dominio"]
+        SCH["scheduling · :3001<br/>RF-18 a RF-24"]
+        CHK["checkin · :3002<br/>RF-01 a RF-10"]
+        EHR["ehr-prescriptions · :3003<br/>RF-11 a RF-17"]
+        PHA["pharmacy · :3004<br/>RF-25 a RF-32"]
+        HLP["helpdesk · :3005<br/>RF-40 a RF-47"]
+        TEL["telehealth · :3006<br/>sin frontend"]
+    end
+
+    QSTASH{{"Upstash QStash"}}
+    NOTIF["notification · :3009<br/>sin base de datos"]
+    MAILTRAP[("Mailtrap SMTP")]
+    PG[("Postgres — Render<br/>1 instancia, 7 DBs lógicas separadas")]
+
+    Browser -- "sesión Clerk" --> IP
+
+    IP -- "Bearer JWT" --> SCH
+    IP -- "Bearer JWT" --> CHK
+    IP -- "Bearer JWT" --> EHR
+    IP -- "Bearer JWT" --> PHA
+    IP -- "Bearer JWT" --> HLP
+
+    SCH -. "resolver roles/permisos<br/>(secreto compartido)" .-> Authz
+    CHK -. "resolver roles/permisos" .-> Authz
+    EHR -. "resolver roles/permisos" .-> Authz
+    PHA -. "resolver roles/permisos" .-> Authz
+    HLP -. "resolver roles/permisos" .-> Authz
+    TEL -. "resolver roles/permisos" .-> Authz
+
+    EHR == "publica formula.generada" ==> QSTASH
+    QSTASH == "entrega firmada<br/>(Upstash-Signature)" ==> PHA
+
+    SCH -- "dispara correo" --> NOTIF
+    PHA -- "dispara correo" --> NOTIF
+    HLP -- "dispara correo" --> NOTIF
+    IP -- "webhook user.created" --> NOTIF
+    NOTIF -- "SMTP, reintento x3" --> MAILTRAP
+
+    IP --- PG
+    Dominio --- PG
+```
+
+La flecha punteada es el mecanismo clave: cada servicio verifica el JWT de
+Clerk él mismo (nunca a través de `identity-patient`), pero para resolver
+roles/permisos sí le devuelve la llamada — es la única fuente de verdad de
+RBAC. La flecha doble (`==`) es el único salto asíncrono real del sistema
+(RF-25); todo lo demás es REST síncrono directo, a propósito.
+
 Los 6 servicios NestJS comparten una única instancia de Postgres en Render
 (límite del free tier: una instancia activa), separados en bases de datos
 lógicas distintas (`db_scheduling`, `db_checkin`, `db_ehr_prescriptions`,
